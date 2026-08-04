@@ -396,13 +396,3 @@ body {
   color: #fff;
 }
 
-/* ---------- Footer (shared, from layout.js) ---------- */
-
-.footer {
-  border-top: 1px solid var(--border);
-  background: #fff;
-  text-align: center;
-  padding: 1.1rem 1.5rem;
-  color: var(--muted);
-  font-size: 0.85rem;
-}

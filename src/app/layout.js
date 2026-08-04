@@ -48,13 +48,6 @@ export default function RootLayout({ children }) {
         </nav>
 
         {children}
-
-        <footer className="footer">
-          <p>
-            Young Jains of America - Content Hub demo · built with Next.js +
-            Supabase by Keyush Shah
-          </p>
-        </footer>
       </body>
     </html>
   );
