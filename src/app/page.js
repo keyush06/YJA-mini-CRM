@@ -1,66 +1,104 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// Author: Keyush
+// Description: Public view page - shows the latest YJA content as a card grid.
 
-export default function Home() {
+import { supabase } from "@/lib/supabase";
+
+export const revalidate = 0; // this will make sure that new data is being rendered automatically
+
+// this si dummy, posts within last hr will come here.  I can tweak this to increase/decr time.
+const NEW_RELEASE_WINDOW_MS = 60 * 60 * 1000;
+
+function PostCard({ post }) {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <a
+      href={post.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="card"
+    >
+      <div className="card-image">
+        {post.image_url ? (
+
+          <img src={post.image_url} alt={post.title} />
+        ) : (
+  
+          <img
+            className="placeholder-img"
+            src="/placeholder.jpg"
+            alt="YJA - meditating Tirthankara"
+          />
+        )}
+      </div>
+      <div className="card-body">
+        <h3>{post.title}</h3>
+        {post.description && <p>{post.description}</p>}
+        <span className="card-cta">Read more →</span>
+      </div>
+    </a>
+  );
+}
+
+export default async function Home() {
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  const cutoff = Date.now() - NEW_RELEASE_WINDOW_MS;
+  const newReleases =
+    posts?.filter((p) => new Date(p.created_at).getTime() >= cutoff) ?? [];
+  const earlierPosts =
+    posts?.filter((p) => new Date(p.created_at).getTime() < cutoff) ?? [];
+
+  return (
+    <main className="container">
+      <header className="hero">
+        <p className="eyebrow">Jai Jinendra 🙏</p>
+        <h1>Explore Our Community</h1>
+        <p className="subtitle">
+          The latest publications, events, and resources from Young Jains of
+          America
+        </p>
+      </header>
+
+      {error && <p className="notice">Could not load posts: {error.message}</p>}
+
+      {posts?.length === 0 && (
+        <p className="notice">No posts yet - add one from the Manage page.</p>
+      )}
+
+      {newReleases.length > 0 && (
+        <>
+          <div className="section-title">
+            <h2>New Releases</h2>
+            <span className="section-count">
+              {newReleases.length} {newReleases.length === 1 ? "post" : "posts"}
+            </span>
+          </div>
+          <section className="grid">
+            {newReleases.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </section>
+        </>
+      )}
+
+      {earlierPosts.length > 0 && (
+        <>
+          <div className="section-title section-title-spaced">
+            <h2>Earlier Posts</h2>
+            <span className="section-count">
+              {earlierPosts.length}{" "}
+              {earlierPosts.length === 1 ? "post" : "posts"}
+            </span>
+          </div>
+          <section className="grid">
+            {earlierPosts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </section>
+        </>
+      )}
+    </main>
   );
 }
